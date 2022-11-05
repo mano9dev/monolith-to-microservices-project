@@ -1,0 +1,16 @@
+language: node_js
+node_js:
+- 13
+
+services:
+- docker
+
+script:
+- docker-compose -f docker-compose-build.yaml build
+
+# after build:
+# - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+# # - docker push emmanuelz/udacity-reverseproxy
+# # - docker push emmanuelz/udacity-udagram-api-user
+# # - docker push emmanuelz/udacity-udagram-api-feed
+# - docker push emmanuelz/udacity-udagram-frontend
