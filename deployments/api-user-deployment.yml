@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: backend-user
+  name: backend-user
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend-user
+  template:
+    metadata:
+      labels:
+        app: backend-user
+    spec:
+      containers:
+        - image: emmanuelz/udagram-api-user
+          name: backend-user
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 8080
+          resources:
+            requests:
+              cpu: 100m
+              memory: "256Mi"
+          #  limits:
+          #    cpu: 1000m
+          #    memory: "1Gi"
+          env:
+            - name: POSTGRES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysecretenv
+                  key: postgres_username
+            - name:  POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysecretenv
+                  key: postgres_password
+            - name:  POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: appconfigsmap
+                  key: postgres_db
+            - name:  POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: appconfigsmap
+                  key: database_host
+            - name:  AWS_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: appconfigsmap
+                  key: aws_bucket_name
+            - name:  JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mysecretenv
+                  key: jst_secret
+            - name:  AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: appconfigsmap
+                  key: aws_default-region
+            - name:  AWS_PROFILE
+              valueFrom:
+                secretKeyRef:
+                  name: myawssecret
+                  key: aws_profile
+            - name:  URL
+              value: "http://localhost:8080"
+          volumeMounts:
+              - name: myawssecret
+                mountPath: /root/.aws
+                readOnly: true
+      volumes:
+        - name: myawssecret
+          secret:
+            secretName: myawssecret
+        
+      restartPolicy: Always
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: backend-user
+  name: backend-user
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: backend-user
+  type: ClusterIP

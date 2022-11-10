@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: appconfigsmap
+data:
+  aws_default-region: us-east-2
+  aws_bucket_name: my-own-udacity-bucket-4618
+  database_host: database-2.clnbq7rthivm.us-east-2.rds.amazonaws.com
+  postgres_db: udagram_db
+  url: http://localhost:8100

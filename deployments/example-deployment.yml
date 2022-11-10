@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: backend-feed
+  name: backend-feed
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend-feed
+  template:
+    metadata:
+      labels:
+        app: backend-feed
+    spec:
+      containers:
+      - image: sedjro/udacity-udagram-api-feed
+        name: backend-feed
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        resources:
+         requests:
+           cpu: 100m
+           memory: "256Mi"
+        #  limits:
+        #    cpu: 1000m
+        #    memory: "1Gi"
+        env:
+          - name: POSTGRES_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: secretvals
+                key: POSTGRES_USERNAME
+          - name:  POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: secretvals
+                key: POSTGRES_PASSWORD
+          - name:  POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: secretvals
+                key: POSTGRES_DB
+          - name:  POSTGRES_HOST
+            valueFrom:
+              secretKeyRef:
+                name: secretvals
+                key: POSTGRES_HOST
+          - name:  AWS_BUCKET
+            valueFrom:
+              secretKeyRef:
+                name: secretvals
+                key: AWS_BUCKET
+          - name:  JWT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: secretvals
+                key: JWT_SECRET
+          - name:  AWS_REGION
+            valueFrom:
+              configMapKeyRef:
+                name: pubvals
+                key: AWS_REGION
+          - name:  AWS_PROFILE
+            valueFrom:
+              configMapKeyRef:
+                name: pubvals
+                key: AWS_PROFILE
+          - name:  URL
+            value: "http://localhost:8080"
+        volumeMounts:
+            - name: awscreds
+              mountPath: /root/.aws
+              readOnly: true
+      volumes:
+        - name: awscreds
+          secret:
+            secretName: awscreds
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: backend-feed
+  name: backend-feed
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: backend-feed
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: configmap-demo-pod
+spec:
+  containers:
+    - name: demo
+      image: alpine
+      command: ["sleep", "3600"]
+      env:
+        # Define the environment variable
+        - name: PLAYER_INITIAL_LIVES # Notice that the case is different here
+                                     # from the key name in the ConfigMap.
+          valueFrom:
+            configMapKeyRef:
+              name: game-demo           # The ConfigMap this value comes from.
+              key: player_initial_lives # The key to fetch.
+        - name: UI_PROPERTIES_FILE_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: game-demo
+              key: ui_properties_file_name
+      volumeMounts:
+      - name: config
+        mountPath: "/config"
+        readOnly: true
+  volumes:
+  # You set volumes at the Pod level, then mount them into containers inside that Pod
+  - name: config
+    configMap:
+      # Provide the name of the ConfigMap you want to mount.
+      name: game-demo
+      # An array of keys from the ConfigMap to create as files
+      items:
+      - key: "game.properties"
+        path: "game.properties"
+      - key: "user-interface.properties"
+        path: "user-interface.properties"
