@@ -40,3 +40,6 @@ venv/
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+terminate-instante.sh
+deployments/aws-secret.yaml
+deployments/env-secret.yaml
